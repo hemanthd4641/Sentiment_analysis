@@ -191,8 +191,8 @@ Screenshot file path:
 
 Rendered image:
 
-![Sentiment Analysis App](./docs/app_screenshot.png)
+![Sentiment Analysis App](./docs/app_screenshot.jpeg)
 
 If image preview still does not render, open it directly:
 
-[Open screenshot](docs/app_screenshot.png)
+[Open screenshot](docs/app_screenshot.jpeg)
