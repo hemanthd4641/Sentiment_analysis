@@ -1,9 +1,13 @@
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
-import streamlit as st
+# 🔥 FIX: Add project root to Python path (CRITICAL for Streamlit Cloud)
+ROOT_DIR = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT_DIR))
 
+import streamlit as st
 from utils.predict import predict_sentiment
 
 APP_TITLE = "Sentiment Analysis"
@@ -12,6 +16,7 @@ DEFAULT_MODEL_PATH = Path("models") / "sentiment_model.joblib"
 
 st.set_page_config(page_title=APP_TITLE, page_icon="💬", layout="centered")
 
+# 🎨 UI Styling
 st.markdown(
     """
     <style>
@@ -54,29 +59,35 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+# 🎯 Header
 st.markdown(
     """
     <div class="hero">
         <h1 style="margin-bottom: 0.35rem;">Sentiment Analysis Demo</h1>
         <p style="margin: 0; font-size: 1rem; opacity: 0.9;">
-            Predict tweet sentiment with a TF-IDF + Naive Bayes model trained on airline_sentiment_3class.csv.
+            Predict tweet sentiment with a TF-IDF + Naive Bayes model.
         </p>
     </div>
     """,
     unsafe_allow_html=True,
 )
 
+# 📊 Sidebar
 st.sidebar.header("Model Status")
 st.sidebar.write(f"Dataset: {THREE_CLASS_DATASET}")
 
 if DEFAULT_MODEL_PATH.exists():
     st.sidebar.success("Loaded saved model")
 else:
-    st.sidebar.error("No saved model found. Train model with data/raw/airline_sentiment_3class.csv first.")
+    st.sidebar.error("No saved model found. Train model first.")
 
-st.markdown('<div class="card"><strong>1) Enter Text</strong><br/>Type a sentence, review, or tweet and click Analyze Sentiment.</div>', unsafe_allow_html=True)
+# 📝 Input Section
+st.markdown(
+    '<div class="card"><strong>1) Enter Text</strong><br/>Type a sentence and click Analyze.</div>',
+    unsafe_allow_html=True
+)
 
-with st.form("sentiment_form", clear_on_submit=False):
+with st.form("sentiment_form"):
     user_text = st.text_area(
         "Text Input",
         placeholder="Example: The service was quick and the staff were polite.",
@@ -84,26 +95,30 @@ with st.form("sentiment_form", clear_on_submit=False):
     )
     analyze_clicked = st.form_submit_button("Analyze Sentiment")
 
+# 🔍 Prediction
 if analyze_clicked:
     if not user_text.strip():
         st.warning("Please enter some text before analyzing.")
     elif not DEFAULT_MODEL_PATH.exists():
-        st.warning("Model file missing. Run training first using data/raw/airline_sentiment_3class.csv.")
+        st.warning("Model file missing. Please upload model.")
     else:
         result = predict_sentiment(user_text, DEFAULT_MODEL_PATH)
+
         label = str(result["label"])
         confidence = float(result["confidence"])
+
         palette = {
             "positive": "result-positive",
             "negative": "result-negative",
             "neutral": "result-neutral",
         }
+
         st.markdown(
             f"""
             <div class="card">
-                <div><strong>2) Your Input</strong></div>
+                <div><strong>Your Input</strong></div>
                 <div style="margin: 0.45rem 0 0.9rem 0;">{user_text}</div>
-                <div><strong>3) Predicted Sentiment</strong></div>
+                <div><strong>Predicted Sentiment</strong></div>
                 <div class="{palette.get(label, 'result-neutral')}">{label.title()}</div>
                 <div>Confidence Score: {confidence:.2%}</div>
             </div>
@@ -111,11 +126,11 @@ if analyze_clicked:
             unsafe_allow_html=True,
         )
 
-        with st.expander("Show class probabilities"):
-            probabilities = result["probabilities"]
-            for sentiment_label, probability in probabilities.items():
+        with st.expander("Show probabilities"):
+            for sentiment_label, probability in result["probabilities"].items():
                 st.write(f"{sentiment_label.title()}: {probability:.2%}")
 
+# 💡 Examples
 st.markdown(
     """
     <div class="card">
